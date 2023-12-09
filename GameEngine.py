@@ -38,6 +38,7 @@ class GameEngine:
         filename = input("Enter the name of the veggie file: ")
         try:
             with open(filename, 'r') as file:
+                # get the dimensions(rows, columns)
                 lines = file.readlines()
                 dimensions = lines[0].strip().split(",")[1:]
                 rows, cols = int(dimensions[0]), int(dimensions[1])
@@ -47,6 +48,7 @@ class GameEngine:
                     name, symbol, points = line.strip().split(',')
                     self._possible_veggies.append(Veggie(name, symbol, int(points)))
 
+                # set the veggies in random places in the field
                 for _ in range(GameEngine.NUMBEROFVEGGIES):
                     veggie = random.choice(self._possible_veggies)
                     x, y = random.randint(0, rows - 1), random.randint(0, cols - 1)
@@ -151,7 +153,7 @@ class GameEngine:
             dx, dy = random.choice(directions)
             new_x, new_y = rabbit.get_x() + dx, rabbit.get_y() + dy
 
-            if 0 <= new_x < rows and 0 <= new_y < cols:
+            if 0 <= new_x < rows and 0 <= new_y < cols: # this is for covering corner case for not trying to move outside the field borders
                 if self._field[new_x][new_y] is None or isinstance(self._field[new_x][new_y], Veggie):
                     if isinstance(self._field[new_x][new_y], Veggie):
                         self._field[new_x][new_y] = None
