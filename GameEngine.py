@@ -11,6 +11,7 @@ from Creature import Creature
 from FieldInhabitant import FieldInhabitant
 from Rabbit import Rabbit
 from Veggie import Veggie
+from Snake import Snake
 
 
 class GameEngine:
@@ -27,6 +28,7 @@ class GameEngine:
         self._field = []
         self._rabbits = []
         self._captain = None
+        self._snake = None
         self._possible_veggies = []
         self._score = 0
 
@@ -85,6 +87,66 @@ class GameEngine:
             self._rabbits.append(rabbit)
             self._field[x][y] = rabbit
 
+    def init_snake(self):
+        """
+        Initializes a Snake object in a random unoccupied slot in the field.
+        Stores the Snake object in the GameEngine member variable.
+        """
+        rows, cols = len(self._field), len(self._field[0])
+        x, y = random.randint(0, rows - 1), random.randint(0, cols - 1)
+
+        while self._field[x][y] is not None:
+            x, y = random.randint(0, rows - 1), random.randint(0, cols - 1)
+
+        self._snake = Snake(x, y)
+        self._field[x][y] = self._snake
+
+    def move_snake(self):
+        """
+        Moves the snake towards the captain. If the snake reaches the captain, 
+        the captain loses the last five vegetables and some points, and the snake is reset.
+        """
+        if self._snake is None:
+            return
+
+        snake_x, snake_y = self._snake.get_x(), self._snake.get_y()
+        captain_x, captain_y = self._captain.get_x(), self._captain.get_y()
+
+        # Determine direction to move closer to the captain
+        move_x, move_y = 0, 0
+        if snake_x < captain_x:
+            move_x = 1
+        elif snake_x > captain_x:
+            move_x = -1
+
+        if snake_y < captain_y:
+            move_y = 1
+        elif snake_y > captain_y:
+            move_y = -1
+
+        new_x, new_y = snake_x + move_x, snake_y + move_y
+        if 0 <= new_x < len(self._field) and 0 <= new_y < len(self._field[0]):
+            if isinstance(self._field[new_x][new_y], Veggie) or isinstance(self._field[new_x][new_y], Rabbit):
+                return  # Snake can't move into veggies or rabbits
+
+            # Move the snake
+            self._field[snake_x][snake_y] = None
+            self._snake.set_x(new_x)
+            self._snake.set_y(new_y)
+            self._field[new_x][new_y] = self._snake
+
+            if new_x == captain_x and new_y == captain_y:
+                # Snake bites the captain, captain loses last five veggies
+                lost_veggies = min(5, len(self._captain.get_veggies_collected()))
+                for _ in range(lost_veggies):
+                    lost_veggie = self._captain.get_veggies_collected().pop()
+                    self._score -= lost_veggie.get_points()
+
+                print(f"Snake bite! Lost {lost_veggies} vegetables.")
+                
+                # Reset snake position
+                self.init_snake()
+
     def initialize_game(self):
         """
         Initializes the game by setting up veggies, captain, and rabbits on the field.
@@ -93,6 +155,7 @@ class GameEngine:
         self.init_veggies()
         self.init_captain()
         self.init_rabbits()
+        self.init_snake()
 
     def remaining_veggies(self):
         """

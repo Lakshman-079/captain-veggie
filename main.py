@@ -24,6 +24,8 @@ def main():
         game_engine.print_field()
         game_engine.move_rabbits()
         game_engine.move_captain()
+        game_engine.move_snake()
+
         remaining_veggies = game_engine.remaining_veggies()
 
     # Game over
