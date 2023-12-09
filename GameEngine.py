@@ -170,3 +170,93 @@ class GameEngine:
         if 0 <= new_x < len(self._field):
             self._move_captain(new_x, self._captain.get_y())
 
+
+    def move_cpt_horizontal(self, movement):
+        """
+        Moves the captain horizontally based on the specified movement value.
+
+        Args:
+            movement (int): The amount to move horizontally. Negative for left, positive for right.
+        """
+        new_y = self._captain.get_y() + movement
+        if 0 <= new_y < len(self._field[0]):
+            self._move_captain(self._captain.get_x(), new_y)
+
+    def _move_captain(self, new_x, new_y):
+        """
+        Moves the captain to a new location on the field.
+
+        Args:
+            new_x (int): The new x-coordinate for the captain.
+            new_y (int): The new y-coordinate for the captain.
+        """
+        current_x, current_y = self._captain.get_x(), self._captain.get_y()
+        target = self._field[new_x][new_y]
+
+        if target is None or isinstance(target, Veggie):
+            self._field[current_x][current_y] = None
+            self._captain.set_x(new_x)
+            self._captain.set_y(new_y)
+            self._field[new_x][new_y] = self._captain
+
+            if isinstance(target, Veggie):
+                print(f"Yummy! A delicious {target.get_name()}")
+                self._captain.add_veggie(target)
+                self._score += target.get_points()
+
+        elif isinstance(target, Rabbit):
+            print("Don't step on the bunnies!")
+
+    def move_captain(self):
+        """
+        Prompts the player for a direction and moves the captain accordingly.
+        Accepts input for up, down, left, or right movement.
+        """
+        direction = input("Would you like to move up(W), down(S), left(A), or right(D): ").lower()
+        if direction == 'w':
+            self.move_cpt_vertical(-1)
+        elif direction == 's':
+            self.move_cpt_vertical(1)
+        elif direction == 'a':
+            self.move_cpt_horizontal(-1)
+        elif direction == 'd':
+            self.move_cpt_horizontal(1)
+        else:
+            print(f"{direction} is not a valid option")
+
+
+    def game_over(self):
+        """
+        Handles the end of the game.
+        Outputs the harvested vegetables and the final score.
+        """
+        print("GAME OVER!")
+        print("You managed to harvest the following vegetables:")
+        for veggie in self._captain.get_veggies_collected():
+            print(veggie.get_name())
+        print(f"Your score was: {self._score}")
+        self.high_score()
+
+    def high_score(self):
+        """
+        Manages the high score functionality.
+        Loads existing high scores, updates them with the current game's score, and saves back.
+        """
+        high_scores = []
+        if os.path.exists(GameEngine.HIGHSCOREFILE):
+            with open(GameEngine.HIGHSCOREFILE, 'rb') as file:
+                high_scores = pickle.load(file)
+
+        initials = input("Please enter your three initials: ")[:3]
+        new_score = (initials, self._score)
+        high_scores.append(new_score)
+        high_scores.sort(key=lambda x: x[1], reverse=True)
+
+        print("HIGH SCORES")
+        print("Name\tScore")
+        for score in high_scores:
+            print(f"{score[0]}\t\t{score[1]}")
+
+        with open(GameEngine.HIGHSCOREFILE, 'wb') as file:
+            pickle.dump(high_scores, file)
+
